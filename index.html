@@ -749,31 +749,42 @@ function refreshDashboard(){
 
 // ─── HISTORY ───
 function refreshHistory(){
-  const all=loadData();
-  const keys=Object.keys(all).filter(k=>k.startsWith('plan_')).map(k=>k.replace('plan_','')).sort().reverse();
-  const el=document.getElementById('history-list');
-  if(!keys.length){el.innerHTML='<div class="empty-state">ยังไม่มีประวัติ</div>';return;}
-  el.innerHTML=keys.map(key=>{
-    const [y,mo]=key.split('-').map(Number);
-    const d=getData('plan_'+key);
-    const daily=getDailyAllowance(y,mo);
-    const cc=calcCCSummary(y,mo).actual;
-    const salary=d.salary||0;
+  const all = loadData();
+  const keys = Object.keys(all)
+    .filter(k => k.startsWith('plan_'))
+    .map(k => k.replace('plan_',''))
+    .sort()
+    .reverse();
+
+  const el = document.getElementById('history-list');
+
+  // ให้เติม Apps Script URL ก่อนเสมอ
+  const gsEl = document.getElementById('gs-url');
+  if (gsEl) gsEl.value = getGsUrl();
+  updateGsStatus();
+
+  if (!keys.length) {
+    el.innerHTML = '<div class="empty-state">ยังไม่มีประวัติ</div>';
+    return;
+  }
+
+  el.innerHTML = keys.map(key => {
+    const [y, mo] = key.split('-').map(Number);
+    const d = getData('plan_' + key);
+    const daily = getDailyAllowance(y, mo);
+    const cc = calcCCSummary(y, mo).actual;
+    const salary = d.salary || 0;
+
     return `<div class="history-item">
       <div class="history-month">
         <span>${monthLabel(y,mo)}</span>
         <span class="badge ${daily>=400?'badge-green':daily>=200?'badge-yellow':'badge-red'}">฿${Math.round(daily).toLocaleString()}/วัน</span>
       </div>
-      ${salary?`<div class="history-row"><span>เงินเดือน</span><span>${fmt(salary)}</span></div>`:''}
-      ${cc?`<div class="history-row"><span>บัตรเครดิต (จ่ายจริง)</span><span style="color:var(--yellow)">${fmt(cc)}</span></div>`:''}
-      ${d.save?`<div class="history-row"><span>เงินเก็บ</span><span style="color:var(--green)">${fmt(d.save)}</span></div>`:''}
+      ${salary ? `<div class="history-row"><span>เงินเดือน</span><span>${fmt(salary)}</span></div>` : ''}
+      ${cc ? `<div class="history-row"><span>บัตรเครดิต (จ่ายจริง)</span><span style="color:var(--yellow)">${fmt(cc)}</span></div>` : ''}
+      ${d.save ? `<div class="history-row"><span>เงินเก็บ</span><span style="color:var(--green)">${fmt(d.save)}</span></div>` : ''}
     </div>`;
   }).join('');
-
-  // Load GS URL
-  const gsEl=document.getElementById('gs-url');
-  if(gsEl)gsEl.value=getGsUrl();
-  updateGsStatus();
 }
 
 // ─── EXPORT / IMPORT ───
