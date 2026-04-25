@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Money Plan</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #0f0f0f;
+    --bg2: #181818;
+    --bg3: #222222;
+    --bg4: #2a2a2a;
+    --border: #333;
+    --border2: #444;
+    --text: #f0f0f0;
+    --text2: #999;
+    --text3: #666;
+    --green: #00d17a;
+    --green-dim: #00d17a22;
+    --red: #ff5c5c;
+    --red-dim: #ff5c5c22;
+    --yellow: #ffc84a;
+    --yellow-dim: #ffc84a22;
+    --blue: #4da6ff;
+    --blue-dim: #4da6ff22;
+    --accent: #00d17a;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'IBM Plex Sans Thai', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--bg2);
+    border-top: 1px solid var(--border);
+    display: flex;
+    z-index: 100;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  nav button {
+    flex: 1; padding: 12px 4px 10px;
+    background: none; border: none; color: var(--text2);
+    font-family: inherit; font-size: 11px; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    transition: color .2s;
+  }
+  nav button.active { color: var(--accent); }
+  nav button svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* ── LAYOUT ── */
+  main {
+    padding: 0 0 80px;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  .page { display: none; }
+  .page.active { display: block; }
+
+  .top-bar {
+    padding: 20px 20px 0;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .top-bar h1 { font-size: 20px; font-weight: 600; }
+  .month-nav {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .month-nav button {
+    background: var(--bg3); border: 1px solid var(--border);
+    color: var(--text); border-radius: 8px; padding: 6px 10px;
+    cursor: pointer; font-size: 13px;
+  }
+  .month-nav span { font-size: 14px; font-weight: 500; min-width: 80px; text-align: center; }
+
+  /* ── CARDS ── */
+  .section { padding: 16px 20px 0; }
+
+  .hero-card {
+    background: linear-gradient(135deg, #003d22, #001a0f);
+    border: 1px solid #005c32;
+    border-radius: var(--radius);
+    padding: 24px;
+    text-align: center;
+    margin: 16px 20px 0;
+  }
+  .hero-label { font-size: 13px; color: #4dff9e; opacity: .8; margin-bottom: 8px; }
+  .hero-amount {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 48px; font-weight: 500; color: var(--green);
+    line-height: 1;
+  }
+  .hero-unit { font-size: 16px; color: #4dff9e; opacity: .7; margin-top: 4px; }
+  .hero-sub { font-size: 12px; color: #4dff9e; opacity: .5; margin-top: 8px; }
+
+  .stat-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin: 12px 20px 0;
+  }
+  .stat-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+  }
+  .stat-label { font-size: 11px; color: var(--text2); margin-bottom: 4px; }
+  .stat-value { font-size: 18px; font-weight: 500; font-family: 'IBM Plex Mono', monospace; }
+  .stat-value.green { color: var(--green); }
+  .stat-value.red { color: var(--red); }
+  .stat-value.yellow { color: var(--yellow); }
+  .stat-value.blue { color: var(--blue); }
+
+  /* ── CARD LIST ── */
+  .card-list { margin: 12px 20px 0; }
+  .card-item {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    margin-bottom: 8px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .card-icon {
+    width: 36px; height: 36px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 600; flex-shrink: 0;
+  }
+  .card-info { flex: 1; }
+  .card-name { font-size: 13px; font-weight: 500; }
+  .card-amount { font-size: 11px; color: var(--text2); margin-top: 2px; }
+  .card-value {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 15px; font-weight: 500;
+    text-align: right;
+  }
+
+  /* ── FORM ── */
+  .form-section {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin: 12px 20px 0;
+    overflow: hidden;
+  }
+  .form-header {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px; font-weight: 500; color: var(--text2);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .form-row {
+    padding: 10px 16px;
+    display: flex; align-items: center;
+    border-bottom: 1px solid var(--border);
+  }
+  .form-row:last-child { border-bottom: none; }
+  .form-label {
+    font-size: 13px; flex: 1; color: var(--text);
+  }
+  .form-label small { color: var(--text2); font-size: 11px; display: block; }
+  .form-input {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 14px;
+    padding: 7px 10px;
+    width: 130px;
+    text-align: right;
+    transition: border-color .2s;
+  }
+  .form-input:focus { outline: none; border-color: var(--accent); }
+
+  .result-row {
+    padding: 12px 16px;
+    display: flex; align-items: center;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg3);
+  }
+  .result-row:last-child { border-bottom: none; }
+  .result-label { font-size: 13px; flex: 1; color: var(--text2); }
+  .result-value {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 15px; font-weight: 500;
+  }
+
+  /* ── PROGRESS BAR ── */
+  .progress-wrap {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin: 12px 20px 0;
+  }
+  .progress-header {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    margin-bottom: 10px;
+  }
+  .progress-title { font-size: 12px; color: var(--text2); }
+  .progress-pct { font-size: 13px; font-weight: 500; }
+  .progress-bar {
+    height: 6px; background: var(--bg4); border-radius: 3px; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; border-radius: 3px;
+    background: var(--accent);
+    transition: width .5s ease;
+  }
+  .progress-fill.warning { background: var(--yellow); }
+  .progress-fill.danger { background: var(--red); }
+
+  /* ── HISTORY ── */
+  .history-item {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    margin-bottom: 8px;
+  }
+  .history-month { font-size: 13px; font-weight: 500; margin-bottom: 8px; }
+  .history-row {
+    display: flex; justify-content: space-between;
+    font-size: 12px; color: var(--text2); margin-bottom: 4px;
+  }
+  .history-row span:last-child { color: var(--text); font-family: 'IBM Plex Mono', monospace; }
+
+  /* ── BUTTONS ── */
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 10px 18px; border-radius: 9px;
+    font-family: inherit; font-size: 14px; font-weight: 500;
+    cursor: pointer; transition: all .2s; border: none;
+  }
+  .btn-primary { background: var(--accent); color: #000; }
+  .btn-primary:hover { filter: brightness(1.1); }
+  .btn-ghost {
+    background: transparent; color: var(--text2);
+    border: 1px solid var(--border);
+  }
+  .btn-ghost:hover { background: var(--bg3); color: var(--text); }
+  .btn-row {
+    padding: 16px 20px 0;
+    display: flex; gap: 10px;
+  }
+
+  .badge {
+    font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 500;
+  }
+  .badge-green { background: var(--green-dim); color: var(--green); }
+  .badge-red { background: var(--red-dim); color: var(--red); }
+  .badge-yellow { background: var(--yellow-dim); color: var(--yellow); }
+
+  .section-title {
+    font-size: 12px; font-weight: 500; color: var(--text2);
+    letter-spacing: .05em; text-transform: uppercase;
+    padding: 20px 20px 0;
+  }
+
+  .divider {
+    height: 1px; background: var(--border);
+    margin: 16px 20px 0;
+  }
+
+  /* ── CHART ── */
+  .chart-wrap {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin: 12px 20px 0;
+  }
+  .chart-title { font-size: 12px; color: var(--text2); margin-bottom: 12px; }
+  .bar-chart { display: flex; align-items: flex-end; gap: 6px; height: 80px; }
+  .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .bar { width: 100%; border-radius: 4px 4px 0 0; background: var(--accent); opacity: .7; min-height: 2px; transition: all .4s; }
+  .bar:hover { opacity: 1; }
+  .bar-label { font-size: 9px; color: var(--text3); }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.7);
+    z-index: 200; display: flex; align-items: flex-end;
+    opacity: 0; pointer-events: none; transition: opacity .2s;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal {
+    background: var(--bg2);
+    border-radius: 20px 20px 0 0;
+    border: 1px solid var(--border);
+    padding: 20px;
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+    transform: translateY(20px);
+    transition: transform .2s;
+  }
+  .modal-overlay.open .modal { transform: translateY(0); }
+  .modal-title { font-size: 16px; font-weight: 500; margin-bottom: 16px; }
+
+  .empty-state {
+    text-align: center; padding: 40px 20px;
+    color: var(--text3); font-size: 14px;
+  }
+  .empty-state .icon { font-size: 36px; margin-bottom: 10px; }
+
+  @media (min-width: 481px) {
+    main { border-left: 1px solid var(--border); border-right: 1px solid var(--border); }
+  }
+</style>
+</head>
+<body>
+
+<main>
+
+  <!-- ══════════════ DASHBOARD ══════════════ -->
+  <div class="page active" id="page-dashboard">
+    <div class="top-bar">
+      <h1>Money Plan 💰</h1>
+      <div class="month-nav">
+        <button onclick="changeMonth(-1)">‹</button>
+        <span id="dash-month-label">—</span>
+        <button onclick="changeMonth(1)">›</button>
+      </div>
+    </div>
+
+    <div class="hero-card">
+      <div class="hero-label">ใช้จ่ายได้วันนี้</div>
+      <div class="hero-amount" id="dash-daily">—</div>
+      <div class="hero-unit">บาท / วัน</div>
+      <div class="hero-sub" id="dash-daily-sub">—</div>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-label">เงินเดือน</div>
+        <div class="stat-value blue" id="dash-salary">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Fixed Costs</div>
+        <div class="stat-value red" id="dash-fixed">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">บัตรเครดิต (จ่ายจริง)</div>
+        <div class="stat-value yellow" id="dash-cc">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">เงินเก็บ + ลงทุน</div>
+        <div class="stat-value green" id="dash-save">—</div>
+      </div>
+    </div>
+
+    <div id="dash-progress-wrap" style="display:none" class="progress-wrap">
+      <div class="progress-header">
+        <span class="progress-title">Fixed Costs / เงินเดือน</span>
+        <span class="progress-pct" id="dash-progress-pct">0%</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="dash-progress-fill" style="width:0%"></div>
+      </div>
+    </div>
+
+    <p class="section-title">บัตรเครดิตเดือนนี้</p>
+    <div class="card-list" id="dash-cc-list"></div>
+
+    <div class="chart-wrap">
+      <div class="chart-title">ค่าบัตรเครดิต 6 เดือนล่าสุด (บาท)</div>
+      <div class="bar-chart" id="dash-chart"></div>
+    </div>
+  </div>
+
+  <!-- ══════════════ CREDIT CARD ══════════════ -->
+  <div class="page" id="page-cc">
+    <div class="top-bar">
+      <h1>บัตรเครดิต</h1>
+      <div class="month-nav">
+        <button onclick="changeMonth(-1)">‹</button>
+        <span id="cc-month-label">—</span>
+        <button onclick="changeMonth(1)">›</button>
+      </div>
+    </div>
+
+    <p class="section-title">ยอดใช้จ่ายแต่ละบัตร</p>
+    <div class="form-section" id="cc-cards-form"></div>
+
+    <p class="section-title">การโอนเงิน</p>
+    <div class="form-section">
+      <div class="form-row">
+        <div class="form-label">
+          โอนออกรอจ่าย
+          <small>คนอื่นค้างจ่ายฉัน</small>
+        </div>
+        <input class="form-input" type="number" id="cc-transferred-out" placeholder="0" oninput="saveCCData(); calcCC()">
+      </div>
+      <div class="form-row">
+        <div class="form-label">
+          รอคนอื่นโอนมา
+          <small>ส่วนที่รอรับเข้า</small>
+        </div>
+        <input class="form-input" type="number" id="cc-waiting-in" placeholder="0" oninput="saveCCData(); calcCC()">
+      </div>
+    </div>
+
+    <p class="section-title">สรุป</p>
+    <div class="form-section">
+      <div class="result-row">
+        <span class="result-label">รวมทุกบัตร</span>
+        <span class="result-value" id="cc-total">฿0</span>
+      </div>
+      <div class="result-row">
+        <span class="result-label">หัก: โอนออก</span>
+        <span class="result-value" style="color:var(--red)" id="cc-minus-out">- ฿0</span>
+      </div>
+      <div class="result-row">
+        <span class="result-label">หัก: รอรับเข้า</span>
+        <span class="result-value" style="color:var(--red)" id="cc-minus-in">- ฿0</span>
+      </div>
+      <div class="result-row" style="border-top: 1px solid var(--border)">
+        <span class="result-label" style="color:var(--text);font-weight:500">ยอดที่ต้องจ่ายจริง</span>
+        <span class="result-value" style="color:var(--yellow);font-size:18px" id="cc-actual">฿0</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ MONTHLY PLAN ══════════════ -->
+  <div class="page" id="page-plan">
+    <div class="top-bar">
+      <h1>Monthly Plan</h1>
+      <div class="month-nav">
+        <button onclick="changeMonth(-1)">‹</button>
+        <span id="plan-month-label">—</span>
+        <button onclick="changeMonth(1)">›</button>
+      </div>
+    </div>
+
+    <p class="section-title">รายได้</p>
+    <div class="form-section">
+      <div class="form-row">
+        <div class="form-label">เงินเดือน</div>
+        <input class="form-input" type="number" id="plan-salary" placeholder="0" oninput="savePlanData(); calcPlan()">
+      </div>
+    </div>
+
+    <p class="section-title">Fixed Costs</p>
+    <div class="form-section">
+      <div class="form-row"><div class="form-label">ค่าคอนโด / ค่าเช่า</div><input class="form-input" type="number" id="plan-condo" placeholder="0" oninput="savePlanData(); calcPlan()"></div>
+      <div class="form-row"><div class="form-label">ค่าไฟ</div><input class="form-input" type="number" id="plan-electric" placeholder="0" oninput="savePlanData(); calcPlan()"></div>
+      <div class="form-row"><div class="form-label">ค่าน้ำ</div><input class="form-input" type="number" id="plan-water" placeholder="0" oninput="savePlanData(); calcPlan()"></div>
+      <div class="form-row"><div class="form-label">ค่าเน็ต</div><input class="form-input" type="number" id="plan-internet" placeholder="0" oninput="savePlanData(); calcPlan()"></div>
+      <div class="form-row"><div class="form-label">Subscription</div><input class="form-input" type="number" id="plan-sub" placeholder="0" oninput="savePlanData(); calcPlan()"></div>
+      <div class="form-row"><div class="form-label">Support / ประกัน</div><input class="form-input" type="number" id="plan-support" placeholder="0" oninput="savePlanData(); calcPlan()"></div>
+      <div class="form-row"><div class="form-label">ประกันสังคม + เน็ตบ้าน</div><input class="form-input" type="number" id="plan-sso" placeholder="0" oninput="savePlanData(); calcPlan()"></div>
+      <div class="form-row"><div class="form-label">ให้พ่อแม่</div><input class="form-input" type="number" id="plan-parent" placeholder="0" oninput="savePlanData(); calcPlan()"></div>
+    </div>
+
+    <p class="section-title">การออมและลงทุน</p>
+    <div class="form-section">
+      <div class="form-row"><div class="form-label">เงินเก็บ</div><input class="form-input" type="number" id="plan-save" placeholder="0" oninput="savePlanData(); calcPlan()"></div>
+      <div class="form-row"><div class="form-label">ลงทุน</div><input class="form-input" type="number" id="plan-invest" placeholder="0" oninput="savePlanData(); calcPlan()"></div>
+      <div class="form-row"><div class="form-label">อื่นๆ</div><input class="form-input" type="number" id="plan-others" placeholder="0" oninput="savePlanData(); calcPlan()"></div>
+    </div>
+
+    <p class="section-title">สรุปผล</p>
+    <div class="form-section">
+      <div class="result-row"><span class="result-label">บัตรเครดิต (จาก tab บัตร)</span><span class="result-value" style="color:var(--yellow)" id="plan-cc-linked">฿0</span></div>
+      <div class="result-row"><span class="result-label">รวม Fixed Costs ทั้งหมด</span><span class="result-value" style="color:var(--red)" id="plan-total-fixed">฿0</span></div>
+      <div class="result-row"><span class="result-label">เงินคงเหลือหลังหักทั้งหมด</span><span class="result-value" id="plan-remaining">฿0</span></div>
+      <div class="result-row" style="border-top: 1px solid var(--border)">
+        <span class="result-label" style="color:var(--text);font-weight:500">ใช้จ่ายได้วันละ</span>
+        <span class="result-value" style="color:var(--green);font-size:18px" id="plan-daily">฿0</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ HISTORY ══════════════ -->
+  <div class="page" id="page-history">
+    <div class="top-bar">
+      <h1>ประวัติ</h1>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn btn-ghost" onclick="exportData()" style="padding:6px 12px;font-size:12px">Export</button>
+        <button class="btn btn-ghost" onclick="document.getElementById('import-file').click()" style="padding:6px 12px;font-size:12px">Import</button>
+        <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
+      </div>
+    </div>
+    <div id="history-list" style="padding:12px 20px 0"></div>
+  </div>
+
+</main>
+
+<nav>
+  <button class="active" onclick="switchPage('dashboard',this)">
+    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    หน้าหลัก
+  </button>
+  <button onclick="switchPage('cc',this)">
+    <svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><line x1="6" y1="15" x2="10" y2="15"/></svg>
+    บัตรเครดิต
+  </button>
+  <button onclick="switchPage('plan',this)">
+    <svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+    Monthly Plan
+  </button>
+  <button onclick="switchPage('history',this)">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    ประวัติ
+  </button>
+</nav>
+
+<script>
+// ─────────────────────────────
+//  STATE
+// ─────────────────────────────
+const CARDS = [
+  { id:'KTC',         label:'KTC',         color:'#4da6ff', bg:'#4da6ff22' },
+  { id:'KBANK',       label:'KBANK',        color:'#00d17a', bg:'#00d17a22' },
+  { id:'CENTRAL',     label:'CENTRAL',      color:'#ffc84a', bg:'#ffc84a22' },
+  { id:'FIRSTCHOICE', label:'FIRSTCHOICE',  color:'#ff8c4a', bg:'#ff8c4a22' },
+  { id:'UOB',         label:'UOB',          color:'#c97aff', bg:'#c97aff22' },
+];
+
+const now = new Date();
+let currentYear  = now.getFullYear();
+let currentMonth = now.getMonth() + 1; // 1–12
+
+function monthKey(y, m) { return `${y}-${String(m).padStart(2,'0')}`; }
+function currentKey()   { return monthKey(currentYear, currentMonth); }
+
+function loadData() {
+  try { return JSON.parse(localStorage.getItem('moneyplan_v1') || '{}'); } catch { return {}; }
+}
+function saveData(d) { localStorage.setItem('moneyplan_v1', JSON.stringify(d)); }
+
+function getData(key) { return loadData()[key] || {}; }
+function setData(key, val) {
+  const d = loadData(); d[key] = val; saveData(d);
+}
+
+// ─────────────────────────────
+//  NAVIGATION
+// ─────────────────────────────
+function switchPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  btn.classList.add('active');
+  refreshAll();
+}
+
+function changeMonth(delta) {
+  currentMonth += delta;
+  if (currentMonth > 12) { currentMonth = 1;  currentYear++; }
+  if (currentMonth < 1)  { currentMonth = 12; currentYear--; }
+  refreshAll();
+}
+
+function monthLabel(y, m) {
+  const names = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  return `${names[m-1]} ${y}`;
+}
+
+function daysInMonth(y, m) { return new Date(y, m, 0).getDate(); }
+
+// ─────────────────────────────
+//  FORMAT
+// ─────────────────────────────
+function fmt(n) {
+  if (!n && n !== 0) return '—';
+  return '฿' + Math.round(n).toLocaleString('th-TH');
+}
+function fmtShort(n) {
+  if (!n) return '0';
+  if (n >= 1000) return (n/1000).toFixed(1)+'k';
+  return Math.round(n).toString();
+}
+
+// ─────────────────────────────
+//  CREDIT CARD PAGE
+// ─────────────────────────────
+function buildCCForm() {
+  const form = document.getElementById('cc-cards-form');
+  form.innerHTML = CARDS.map(c => `
+    <div class="form-row">
+      <div class="form-label" style="display:flex;align-items:center;gap:8px">
+        <span style="width:28px;height:28px;border-radius:6px;background:${c.bg};display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;color:${c.color}">${c.label.slice(0,3)}</span>
+        ${c.label}
+      </div>
+      <input class="form-input" type="number" id="cc-${c.id}" placeholder="0" oninput="saveCCData(); calcCC()">
+    </div>
+  `).join('');
+}
+
+function loadCCForm() {
+  const key = currentKey();
+  const d = getData('cc_' + key);
+  CARDS.forEach(c => {
+    const el = document.getElementById('cc-' + c.id);
+    if (el) el.value = d[c.id] || '';
+  });
+  const out = document.getElementById('cc-transferred-out');
+  const inp = document.getElementById('cc-waiting-in');
+  if (out) out.value = d.transferredOut || '';
+  if (inp) inp.value = d.waitingIn || '';
+  calcCC();
+}
+
+function saveCCData() {
+  const key = currentKey();
+  const d = {};
+  CARDS.forEach(c => {
+    const el = document.getElementById('cc-' + c.id);
+    d[c.id] = parseFloat(el?.value) || 0;
+  });
+  d.transferredOut = parseFloat(document.getElementById('cc-transferred-out')?.value) || 0;
+  d.waitingIn      = parseFloat(document.getElementById('cc-waiting-in')?.value) || 0;
+  setData('cc_' + key, d);
+}
+
+function calcCC() {
+  const key = currentKey();
+  const d   = getData('cc_' + key);
+  const sum = CARDS.reduce((acc, c) => acc + (parseFloat(document.getElementById('cc-'+c.id)?.value) || d[c.id] || 0), 0);
+  const out = parseFloat(document.getElementById('cc-transferred-out')?.value) || d.transferredOut || 0;
+  const inp = parseFloat(document.getElementById('cc-waiting-in')?.value) || d.waitingIn || 0;
+  const actual = sum - out - inp;
+
+  document.getElementById('cc-total').textContent    = fmt(sum);
+  document.getElementById('cc-minus-out').textContent = '- ' + fmt(out);
+  document.getElementById('cc-minus-in').textContent  = '- ' + fmt(inp);
+  document.getElementById('cc-actual').textContent    = fmt(Math.max(0, actual));
+}
+
+function getCCActual(y, m) {
+  const d = getData('cc_' + monthKey(y, m));
+  const sum = CARDS.reduce((acc, c) => acc + (d[c.id] || 0), 0);
+  return Math.max(0, sum - (d.transferredOut || 0) - (d.waitingIn || 0));
+}
+
+function getCCSum(y, m) {
+  const d = getData('cc_' + monthKey(y, m));
+  return CARDS.reduce((acc, c) => acc + (d[c.id] || 0), 0);
+}
+
+// ─────────────────────────────
+//  MONTHLY PLAN PAGE
+// ─────────────────────────────
+const PLAN_FIELDS = [
+  ['salary','plan-salary'],
+  ['condo','plan-condo'],['electric','plan-electric'],['water','plan-water'],
+  ['internet','plan-internet'],['sub','plan-sub'],['support','plan-support'],
+  ['sso','plan-sso'],['parent','plan-parent'],
+  ['save','plan-save'],['invest','plan-invest'],['others','plan-others'],
+];
+
+function loadPlanForm() {
+  const key = currentKey();
+  const d   = getData('plan_' + key);
+  PLAN_FIELDS.forEach(([field, elId]) => {
+    const el = document.getElementById(elId);
+    if (el) el.value = d[field] || '';
+  });
+  calcPlan();
+}
+
+function savePlanData() {
+  const key = currentKey();
+  const d = {};
+  PLAN_FIELDS.forEach(([field, elId]) => {
+    const el = document.getElementById(elId);
+    d[field] = parseFloat(el?.value) || 0;
+  });
+  setData('plan_' + key, d);
+}
+
+function calcPlan() {
+  const key = currentKey();
+  const d   = getData('plan_' + key);
+  const getV = (field, elId) => parseFloat(document.getElementById(elId)?.value) || d[field] || 0;
+
+  const salary  = getV('salary','plan-salary');
+  const ccActual = getCCActual(currentYear, currentMonth);
+  const fixed = ['condo','electric','water','internet','sub','support','sso','parent'].reduce((acc, f) => {
+    return acc + (parseFloat(document.getElementById('plan-'+f)?.value) || d[f] || 0);
+  }, 0);
+  const save   = getV('save','plan-save');
+  const invest = getV('invest','plan-invest');
+  const others = getV('others','plan-others');
+
+  const totalFixed  = fixed + ccActual + save + invest + others;
+  const remaining   = salary - totalFixed;
+  const days        = daysInMonth(currentYear, currentMonth);
+  const daily       = remaining / days;
+
+  document.getElementById('plan-cc-linked').textContent    = fmt(ccActual);
+  document.getElementById('plan-total-fixed').textContent  = fmt(totalFixed);
+  document.getElementById('plan-remaining').textContent    = fmt(remaining);
+  document.getElementById('plan-remaining').style.color    = remaining >= 0 ? 'var(--green)' : 'var(--red)';
+  document.getElementById('plan-daily').textContent        = fmt(daily);
+  document.getElementById('plan-daily').style.color        = daily >= 400 ? 'var(--green)' : daily >= 200 ? 'var(--yellow)' : 'var(--red)';
+}
+
+function getDailyAllowance(y, m) {
+  const d       = getData('plan_' + monthKey(y, m));
+  const salary  = d.salary || 0;
+  const ccActual = getCCActual(y, m);
+  const fixed   = ['condo','electric','water','internet','sub','support','sso','parent'].reduce((acc, f) => acc + (d[f] || 0), 0);
+  const totalFixed = fixed + ccActual + (d.save||0) + (d.invest||0) + (d.others||0);
+  const remaining  = salary - totalFixed;
+  const days       = daysInMonth(y, m);
+  return days > 0 ? remaining / days : 0;
+}
+
+// ─────────────────────────────
+//  DASHBOARD
+// ─────────────────────────────
+function refreshDashboard() {
+  const lbl = monthLabel(currentYear, currentMonth);
+  document.getElementById('dash-month-label').textContent = lbl;
+
+  const daily   = getDailyAllowance(currentYear, currentMonth);
+  const d       = getData('plan_' + currentKey());
+  const salary  = d.salary || 0;
+  const ccActual = getCCActual(currentYear, currentMonth);
+  const fixed   = ['condo','electric','water','internet','sub','support','sso','parent'].reduce((acc, f) => acc + (d[f] || 0), 0);
+  const save    = (d.save||0) + (d.invest||0);
+  const totalFixed = fixed + ccActual + save + (d.others||0);
+  const days    = daysInMonth(currentYear, currentMonth);
+
+  document.getElementById('dash-daily').textContent = daily > 0
+    ? Math.round(daily).toLocaleString('th-TH') : '—';
+  document.getElementById('dash-daily-sub').textContent = `${days} วันในเดือน ${monthLabel(currentYear, currentMonth)}`;
+
+  document.getElementById('dash-salary').textContent = fmt(salary);
+  document.getElementById('dash-fixed').textContent  = fmt(totalFixed);
+  document.getElementById('dash-cc').textContent     = fmt(ccActual);
+  document.getElementById('dash-save').textContent   = fmt(save);
+
+  if (salary > 0) {
+    const pct = Math.min(100, Math.round(totalFixed / salary * 100));
+    document.getElementById('dash-progress-wrap').style.display = '';
+    document.getElementById('dash-progress-pct').textContent = pct + '%';
+    const fill = document.getElementById('dash-progress-fill');
+    fill.style.width = pct + '%';
+    fill.className = 'progress-fill' + (pct > 90 ? ' danger' : pct > 75 ? ' warning' : '');
+  }
+
+  // CC list
+  const ccData = getData('cc_' + currentKey());
+  const list = document.getElementById('dash-cc-list');
+  const hasCC = CARDS.some(c => ccData[c.id] > 0);
+  if (!hasCC) {
+    list.innerHTML = '<div class="empty-state"><div class="icon">💳</div>ยังไม่มีข้อมูลบัตรเครดิตเดือนนี้</div>';
+  } else {
+    list.innerHTML = CARDS.filter(c => ccData[c.id] > 0).map(c => `
+      <div class="card-item">
+        <div class="card-icon" style="background:${c.bg};color:${c.color}">${c.label.slice(0,3)}</div>
+        <div class="card-info">
+          <div class="card-name">${c.label}</div>
+        </div>
+        <div class="card-value" style="color:${c.color}">${fmt(ccData[c.id])}</div>
+      </div>
+    `).join('');
+  }
+
+  // Chart — 6 months
+  const chart = document.getElementById('dash-chart');
+  const months = [];
+  for (let i = 5; i >= 0; i--) {
+    let m = currentMonth - i; let y = currentYear;
+    while (m < 1) { m += 12; y--; }
+    months.push({ y, m });
+  }
+  const vals = months.map(({ y, m }) => getCCSum(y, m));
+  const maxV = Math.max(...vals, 1);
+  const names = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  chart.innerHTML = months.map(({ m }, i) => `
+    <div class="bar-col">
+      <div class="bar" style="height:${Math.round(vals[i]/maxV*70)+2}px;opacity:${i===5?'1':'0.5'}"></div>
+      <div class="bar-label">${names[m-1]}</div>
+    </div>
+  `).join('');
+}
+
+// ─────────────────────────────
+//  HISTORY PAGE
+// ─────────────────────────────
+function refreshHistory() {
+  const allData = loadData();
+  const keys = Object.keys(allData)
+    .filter(k => k.startsWith('plan_'))
+    .map(k => k.replace('plan_',''))
+    .sort().reverse();
+
+  const el = document.getElementById('history-list');
+  if (!keys.length) {
+    el.innerHTML = '<div class="empty-state"><div class="icon">📅</div>ยังไม่มีข้อมูลประวัติ</div>';
+    return;
+  }
+  el.innerHTML = keys.map(key => {
+    const [y, mo] = key.split('-').map(Number);
+    const d = getData('plan_' + key);
+    const daily = getDailyAllowance(y, mo);
+    const cc = getCCActual(y, mo);
+    const salary = d.salary || 0;
+    return `
+      <div class="history-item">
+        <div class="history-month" style="display:flex;justify-content:space-between;align-items:center">
+          <span>${monthLabel(y, mo)}</span>
+          <span class="badge ${daily >= 400 ? 'badge-green' : daily >= 200 ? 'badge-yellow' : 'badge-red'}">
+            ฿${Math.round(daily).toLocaleString()}/วัน
+          </span>
+        </div>
+        ${salary ? `<div class="history-row"><span>เงินเดือน</span><span>${fmt(salary)}</span></div>` : ''}
+        ${cc ? `<div class="history-row"><span>บัตรเครดิต (จ่ายจริง)</span><span style="color:var(--yellow)">${fmt(cc)}</span></div>` : ''}
+        ${d.save ? `<div class="history-row"><span>เงินเก็บ</span><span style="color:var(--green)">${fmt(d.save)}</span></div>` : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+// ─────────────────────────────
+//  EXPORT / IMPORT
+// ─────────────────────────────
+function exportData() {
+  const d    = loadData();
+  const json = JSON.stringify(d, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `money-plan-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importData(event) {
+  const file   = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const d = JSON.parse(e.target.result);
+      saveData(d);
+      refreshAll();
+      alert('นำเข้าข้อมูลสำเร็จ!');
+    } catch { alert('ไฟล์ไม่ถูกต้อง'); }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+// ─────────────────────────────
+//  REFRESH ALL
+// ─────────────────────────────
+function refreshAll() {
+  const lbl = monthLabel(currentYear, currentMonth);
+  ['cc','plan'].forEach(id => {
+    const el = document.getElementById(id + '-month-label');
+    if (el) el.textContent = lbl;
+  });
+  refreshDashboard();
+  loadCCForm();
+  loadPlanForm();
+  refreshHistory();
+}
+
+// ─────────────────────────────
+//  INIT
+// ─────────────────────────────
+buildCCForm();
+refreshAll();
+</script>
+</body>
+</html>
