@@ -406,7 +406,9 @@ function getData(key){return loadData()[key]||{};}
 function getArr(key){const d=loadData();return Array.isArray(d[key])?d[key]:[];}
 function setData(key,val){const d=loadData();d[key]=val;saveData(d);}
 
-function getGsUrl(){return localStorage.getItem('gs_url')||'';}
+function getGsUrl(){
+  return localStorage.getItem('gs_url') || 'https://script.google.com/macros/s/AKfycbxH_gc68kaTsX0U7RwUrKQVZyM1gh6BfodxA17TKAwMe08-erZON2rwTBvhl6rfJVTmcw/exec';
+}
 function saveGsUrl(){const v=document.getElementById('gs-url').value.trim();localStorage.setItem('gs_url',v);updateGsStatus();}
 function updateGsStatus(){
   const el=document.getElementById('gs-status');
