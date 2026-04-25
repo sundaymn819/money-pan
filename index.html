@@ -419,11 +419,12 @@ nav{
   </div>
 
   <p class="section-title">Google Sheets (ซิงก์ข้ามอุปกรณ์)</p>
-  <div class="settings-row">
-    <label>Apps Script URL (ถ้าต้องการซิงก์กับ Google Sheets)</label>
-    <input type="text" id="gs-url" placeholder="https://script.google.com/macros/s/..." oninput="saveGsUrl()">
-    <div class="settings-status" id="gs-status" style="color:var(--text2)">ยังไม่ได้ตั้งค่า — ข้อมูลเก็บใน browser</div>
-  </div>
+ <div class="settings-row">
+  <label>Apps Script URL (ถ้าต้องการซิงก์กับ Google Sheets)</label>
+  <input type="text" id="gs-url" placeholder="https://script.google.com/macros/s/..." oninput="saveGsUrl()">
+  <div class="settings-status" id="gs-status" style="color:var(--text2)">ยังไม่ได้ตั้งค่า — ข้อมูลเก็บใน browser</div>
+  <div class="settings-status" id="sync-inline-status" style="margin-top:6px;color:var(--text2)">พร้อมใช้งาน</div>
+</div>
   <div style="padding:0 20px;margin-top:8px">
     <button onclick="testGsConnection()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text2);padding:8px 14px;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit">ทดสอบการเชื่อมต่อ</button>
     <button onclick="syncToSheet()" style="background:var(--bg3);border:1px solid var(--border);color:var(--accent);padding:8px 14px;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit;margin-left:8px">Sync ขึ้น Sheet</button>
@@ -577,24 +578,23 @@ function setLastSyncedNow(){
 }
 
 function updateSyncBanner(state = 'idle', text = ''){
-  const dot = document.getElementById('sync-dot');
-  const label = document.getElementById('sync-text');
-  if (!dot || !label) return;
+  const el = document.getElementById('sync-inline-status');
+  if (!el) return;
 
-  dot.className = 'sync-dot';
-  if (state === 'syncing') dot.classList.add('syncing');
-  if (state === 'success') dot.classList.add('success');
-  if (state === 'error') dot.classList.add('error');
+  if (state === 'syncing') el.style.color = 'var(--blue)';
+  else if (state === 'success') el.style.color = 'var(--green)';
+  else if (state === 'error') el.style.color = 'var(--red)';
+  else el.style.color = 'var(--text2)';
 
   if (text) {
-    label.textContent = text;
+    el.textContent = text;
     return;
   }
 
   if (lastSyncedAt) {
-    label.textContent = `ซิงก์ล่าสุด ${formatSyncTime(lastSyncedAt)}`;
+    el.textContent = `ซิงก์ล่าสุด ${formatSyncTime(lastSyncedAt)}`;
   } else {
-    label.textContent = 'พร้อมใช้งาน';
+    el.textContent = 'พร้อมใช้งาน';
   }
 }
 
